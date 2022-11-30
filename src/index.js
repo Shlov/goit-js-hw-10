@@ -1,7 +1,7 @@
 import './css/styles.css';
 import debounce from 'lodash.debounce';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import fetchCountries from './js/fetchCountries';
+import {  fetchCountries } from './js/fetchCountries';
 
 Notify.init({
   cssAnimationDuration: 400,
@@ -14,7 +14,7 @@ Notify.init({
 
 const DEBOUNCE_DELAY = 300;
 
-export const refs = {
+const refs = {
   inputEl: document.querySelector('#search-box'),
   listEl: document.querySelector('.country-list'),
   infoEl: document.querySelector('.country-info'),
@@ -26,25 +26,48 @@ function foo(event) {
   const name = event.target.value.trim();
   if (!name.length) {
     refs.listEl.innerHTML = '';
+    refs.infoEl.innerHTML = '';
     return
   }
-  fetchCountries(name);
+  fetchCountries(name)
+  .then(response => {
+    if (!response.ok) {
+      refs.listEl.innerHTML = '';
+      refs.infoEl.innerHTML = '';
+      throw new Error(response.status, Notify.failure('Oops, there is no country with that name.'));
+    }
+    return response.json();
+  })
+  .then(
+    data => {
+    if (!(data.length-1)) {
+      refs.listEl.innerHTML = '';
+      markupCountry(data);
+    } else if (data.length <= 10) {
+      refs.infoEl.innerHTML = '';
+      markupCountrys(data)
+    } else {
+      Notify.info('Too many matches found. Please enter a more specific name.');
+      console.log('>10');
+      refs.listEl.innerHTML = '';
+      refs.infoEl.innerHTML = '';
+    }
+  });
 }
 
-export function markupCountry(country) {
+function markupCountry(country) {
   const markup = country.map(country => 
-    `<li class="countrys-item">
-    <img class="item-flag" src="${country.flags.svg}" alt="flag" width="100" >
+    `<img class="item-flag" src="${country.flags.svg}" alt="flag" width="100" >
     <h2 class="item-country">${country.name}</h2>
     <p class="item-capital"><span class="item-span">Capital: </span>${country.capital}</p>
     <p class="item-population"><span class="item-span">Population: </span>${country.population}</p>
     <p class="item-languages"><span class="item-span">Languages: </span>${country.languages.map(ln => ln.name).join('/')}</p>
-  </li>`
+    `
   ).join('');
-  refs.listEl.innerHTML = markup;
+  refs.infoEl.innerHTML = markup;
 }
 
-export function markupCountrys(countrys) {
+function markupCountrys(countrys) {
   const markup = countrys.map(country => 
     `<li class="country-item">
     <img class="item-flag" src="${country.flags.svg}" alt="flag" width="40" >
