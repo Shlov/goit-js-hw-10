@@ -14,7 +14,7 @@ Notify.init({
 
 const DEBOUNCE_DELAY = 300;
 
-const refs = {
+export const refs = {
   inputEl: document.querySelector('#search-box'),
   listEl: document.querySelector('.country-list'),
   infoEl: document.querySelector('.country-info'),
@@ -29,17 +29,7 @@ function foo(event) {
     refs.infoEl.innerHTML = '';
     return
   }
-  fetchCountries(name)
-  .then(response => {
-    if (!response.ok) {
-      refs.listEl.innerHTML = '';
-      refs.infoEl.innerHTML = '';
-      throw new Error(response.status, Notify.failure('Oops, there is no country with that name.'));
-    }
-    return response.json();
-  })
-  .then(
-    data => {
+  fetchCountries(name).then(data => {
     if (!(data.length-1)) {
       refs.listEl.innerHTML = '';
       markupCountry(data);
@@ -52,6 +42,11 @@ function foo(event) {
       refs.listEl.innerHTML = '';
       refs.infoEl.innerHTML = '';
     }
+  }).catch(error => {
+    console.log(error, '🤷‍♂️ нема');
+    refs.listEl.innerHTML = '';
+    refs.infoEl.innerHTML = '';
+    Notify.failure('Oops, there is no country with that name.')
   });
 }
 
